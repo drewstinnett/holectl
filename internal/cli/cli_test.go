@@ -517,3 +517,46 @@ func TestParseWhen(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
+func TestSkillInstallIsIdempotentAndUpdates(t *testing.T) {
+	SkillMarkdown = "v1\n"
+	t.Cleanup(func() { SkillMarkdown = "" })
+	dir := t.TempDir()
+	path := filepath.Join(dir, "holectl", "SKILL.md")
+	action := func() string {
+		stdout, stderr, code := run(t, nil, "", "skill", "install", "--dir", dir)
+		if code != 0 {
+			t.Fatalf("exit %d: %s", code, stderr)
+		}
+		var r struct{ Action string }
+		_ = json.Unmarshal([]byte(stdout), &r)
+		return r.Action
+	}
+	if a := action(); a != "installed" {
+		t.Fatalf("first install: %q", a)
+	}
+	if a := action(); a != "unchanged" {
+		t.Fatalf("second install: %q", a)
+	}
+	SkillMarkdown = "v2\n" // a newer binary
+	stdout, _, _ := run(t, nil, "", "skill", "status", "--dir", dir)
+	if !strings.Contains(stdout, `"up_to_date": false`) {
+		t.Fatalf("status before update: %s", stdout)
+	}
+	if _, _, code := run(t, nil, "", "-n", "skill", "update", "--dir", dir); code != 0 {
+		t.Fatal(code)
+	}
+	if data, _ := os.ReadFile(path); string(data) != "v1\n" {
+		t.Fatalf("dry run wrote the file: %q", data)
+	}
+	if a := action(); a != "updated" {
+		t.Fatalf("install after upgrade: %q", a)
+	}
+	if data, _ := os.ReadFile(path); string(data) != "v2\n" {
+		t.Fatalf("content %q", data)
+	}
+	run(t, nil, "", "skill", "uninstall", "--dir", dir)
+	if _, err := os.Stat(filepath.Dir(path)); !os.IsNotExist(err) {
+		t.Fatalf("skill dir still present: %v", err)
+	}
+}

@@ -82,7 +82,9 @@ Run `holectl --help` or `holectl <command> --help` for details.
 An agent skill ships with the binary:
 
 ```bash
-holectl skill install            # writes ~/.claude/skills/holectl/SKILL.md
+holectl skill install            # install, or update after upgrading holectl (safe to re-run)
+holectl skill status             # installed? up to date with this binary?
+holectl skill install --project  # this project only: ./.claude/skills
 holectl skill print              # or view it
 ```
 

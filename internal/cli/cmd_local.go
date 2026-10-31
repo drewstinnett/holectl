@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -62,7 +61,7 @@ which is visible in the process list. Example:
 				return usagef(c.cmd, "--url is required")
 			}
 			if c.G.DryRun {
-				return c.printValue(map[string]any{"dry_run": true, "path": c.cfgPath, "config": cfg.Redacted()})
+				return c.printValue(map[string]any{keyDryRun: true, "path": c.cfgPath, "config": cfg.Redacted()})
 			}
 			if err := cfg.Save(c.cfgPath); err != nil {
 				return err
@@ -144,7 +143,7 @@ func configSetCmd() *Command {
 					return err
 				}
 			}
-			return c.printValue(map[string]any{"path": c.cfgPath, "config": cfg.Redacted(), "dry_run": c.G.DryRun})
+			return c.printValue(map[string]any{"path": c.cfgPath, "config": cfg.Redacted(), keyDryRun: c.G.DryRun})
 		},
 	}
 }
@@ -175,7 +174,7 @@ func configUnsetCmd() *Command {
 					return err
 				}
 			}
-			return c.printValue(map[string]any{"path": c.cfgPath, "config": cfg.Redacted(), "dry_run": c.G.DryRun})
+			return c.printValue(map[string]any{"path": c.cfgPath, "config": cfg.Redacted(), keyDryRun: c.G.DryRun})
 		},
 	}
 }
@@ -191,58 +190,6 @@ func configPathCmd() *Command {
 			}
 			_, err := fmt.Fprintln(c.Stdout, c.cfgPath)
 			return err
-		},
-	}
-}
-
-func skillCmd() *Command {
-	var dir string
-	var force bool
-	return &Command{
-		Name:    "skill",
-		Summary: "Print or install the agent skill (SKILL.md) that teaches agents to use holectl",
-		Subs: []*Command{
-			{
-				Name:    "print",
-				Summary: "Print SKILL.md to stdout",
-				Local:   true,
-				Run: func(c *Ctx, _ []string) error {
-					_, err := io.WriteString(c.Stdout, SkillMarkdown)
-					return err
-				},
-			},
-			{
-				Name:    "install",
-				Summary: "Write SKILL.md to <dir>/holectl/SKILL.md (default ~/.claude/skills)",
-				Mutates: true,
-				Local:   true,
-				Flags: func(fs *flag.FlagSet) {
-					fs.StringVar(&dir, "dir", "", "skills directory (default ~/.claude/skills)")
-					fs.BoolVar(&force, "force", false, "overwrite an existing SKILL.md")
-				},
-				Run: func(c *Ctx, _ []string) error {
-					if dir == "" {
-						home, err := os.UserHomeDir()
-						if err != nil {
-							return err
-						}
-						dir = filepath.Join(home, ".claude", "skills")
-					}
-					path := filepath.Join(dir, "holectl", "SKILL.md")
-					if _, err := os.Stat(path); err == nil && !force {
-						return usagef(c.cmd, "%s already exists; pass --force to overwrite", path)
-					}
-					if !c.G.DryRun {
-						if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
-							return err
-						}
-						if err := os.WriteFile(path, []byte(SkillMarkdown), 0o644); err != nil { //nolint:gosec
-							return err
-						}
-					}
-					return c.printValue(map[string]any{"path": path, "dry_run": c.G.DryRun})
-				},
-			},
 		},
 	}
 }

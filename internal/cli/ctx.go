@@ -74,6 +74,9 @@ func isGlobalFlag(name string) bool {
 
 const shorthandPrefix = "shorthand for --"
 
+// keyDryRun is the JSON key every locally built response uses to say nothing was changed.
+const keyDryRun = "dry_run"
+
 func (g *Globals) register(fs *flag.FlagSet) {
 	bind := func(name, short, usage string, fn func(name, usage string)) {
 		fn(name, usage)

@@ -27,9 +27,9 @@ install: check
 	install -m 0755 $(BIN) $(PREFIX)/$(BIN)
 	@$(PREFIX)/$(BIN) version -o json
 
-# Install the agent skill into ~/.claude/skills/holectl/SKILL.md.
+# Install or update the agent skill in ~/.claude/skills/holectl/SKILL.md.
 skill: build
-	./$(BIN) skill install --force
+	./$(BIN) skill install
 
 clean:
 	rm -f $(BIN)

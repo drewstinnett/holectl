@@ -202,7 +202,7 @@ func (c *Ctx) printPlanned() error {
 	if len(c.planned) == 0 {
 		return errors.New("dry run produced no requests")
 	}
-	return c.printValue(map[string]any{"dry_run": true, "requests": c.planned})
+	return c.printValue(map[string]any{keyDryRun: true, "requests": c.planned})
 }
 
 // renderTable prints n for humans. An array of objects (at the top, or as the one array-of-objects
