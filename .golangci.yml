@@ -1,0 +1,86 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - godox
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+  settings:
+    funlen:
+      lines: 60
+      statements: 40
+    gocognit:
+      min-complexity: 20
+    dupl:
+      threshold: 100
+    goconst:
+      min-len: 3
+      min-occurrences: 6
+      # Command names ("list", "remove", ...) and JSON keys repeat by design.
+      ignore-string-values:
+        - "^(list|add|update|remove|rm|delete|type|kind|comment|groups|enabled|count|from|until|true|false|json|table|auto|config|domains|lists|clients|item|name|status|regex|exact|allow|deny|block|path)$"
+    depguard:
+      rules:
+        # holectl has zero third-party dependencies, and this keeps it that way.
+        main:
+          files:
+            - "$all"
+          deny:
+            - pkg: "log$"
+              desc: "Use log/slog so we can always do structured logging"
+          allow:
+            - "$gostd"
+            - "github.com/drewstinnett/holectl"
+    misspell:
+      locale: US
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - dupl
+          - errcheck
+          - funlen
+          - goconst
+          - gosec
+      # Paths come from the user (config file, session cache, --file, teleporter archives).
+      - path: internal/
+        text: "G304|G117"
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
