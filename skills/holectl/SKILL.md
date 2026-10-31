@@ -1,6 +1,6 @@
 ---
 name: holectl
-description: Control a Pi-hole v6 DNS sink-hole with the holectl CLI. Use when asked to check or toggle ad blocking, allow or block a domain, find out why a domain is blocked, look at DNS query logs or top blocked domains/clients, manage blocklists, groups or clients, change Pi-hole settings, update gravity, read Pi-hole logs, or back up/restore a Pi-hole.
+description: Control a Pi-hole v6 DNS sink-hole with the holectl CLI. Use when asked to add, change or remove local DNS records (A/AAAA records, CNAMEs, "point nas.lan at 192.168.1.10", "make media.lan an alias for nas.lan" — the web UI's Local DNS page), check or toggle ad blocking, allow or block a domain, find out why a domain is blocked, look at DNS query logs or top blocked domains/clients, manage blocklists, groups or clients, change Pi-hole settings, update gravity, read Pi-hole logs, or back up/restore a Pi-hole.
 ---
 
 # holectl: Pi-hole from the command line
@@ -54,6 +54,48 @@ holectl auth status -o json    # verify: session.valid should be true
   `holectl auth sessions` and `holectl auth revoke <id>`.
 - If 2FA is on, a human must run `holectl auth login --totp <code>` once; or use an app password
   (`holectl auth app-password`). Don't invent TOTP codes.
+
+## Local DNS records and CNAMEs (the web UI's "Local DNS" page)
+
+Use **`holectl local-dns`** (alias `holectl dns`) for these. It has two subcommands, one for each
+of the web UI's tabs:
+
+| want | command | stored by Pi-hole as |
+|---|---|---|
+| a hostname answers with an **IP** (A, or AAAA for IPv6) | `holectl local-dns records add <hostname> <ip>` | `dns.hosts`: `"192.168.1.10 nas.lan"` |
+| an alias answers with **another hostname** (CNAME) | `holectl local-dns cname add <alias> <target>` | `dns.cnameRecords`: `"media.lan,nas.lan"` |
+
+```bash
+# A / AAAA records: hostname -> IP (the two args may come in either order)
+holectl local-dns records add nas.lan 192.168.1.10 -o json
+holectl local-dns records add nas.lan fd00::10 -o json        # IPv6 -> AAAA
+holectl local-dns records list -o json
+holectl local-dns records remove nas.lan -o json              # every record for nas.lan
+holectl local-dns records remove nas.lan 192.168.1.10 -o json # only that one
+
+# CNAMEs: alias -> existing hostname (order matters: the NEW name first)
+holectl local-dns cname add media.lan nas.lan -o json
+holectl local-dns cname add media.lan nas.lan --ttl 300 -o json
+holectl local-dns cname list -o json
+holectl local-dns cname remove media.lan -o json              # matches whatever target/TTL is stored
+
+# Verify it resolves
+dig +short media.lan @<pi-hole-ip>
+```
+
+- **Choose by what the name points at.** An IP needs `records`, a hostname needs `cname`. The
+  commands refuse the wrong kind (exit 2) rather than store a broken entry.
+- **A CNAME target must be a name Pi-hole answers itself**, normally a local record. Pi-hole does
+  not follow a CNAME to an outside domain such as `example.com`. Add the target with
+  `records add` first, then the CNAME.
+- **Don't hand-edit `dns.hosts` / `dns.cnameRecords`** with `server-config set`. `set` replaces the
+  whole array, which drops every existing record. The field order and separators also differ
+  between the two settings (`IP host` with a space, `alias,target` with a comma). Use
+  `local-dns`, which builds the entry strings itself.
+- Adding an entry that already exists is rejected (exit 5). Removing one that doesn't match
+  anything is exit 4. `--dry-run` shows the exact `PUT`/`DELETE` that would be sent.
+- Changes take effect immediately (FTL reloads). Lists come back as the API's JSON:
+  `config.dns.hosts` / `config.dns.cnameRecords`, arrays of the strings shown above.
 
 ## Common tasks
 

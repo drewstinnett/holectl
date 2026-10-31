@@ -87,6 +87,8 @@ holectl domains add --type allow --wildcard example.com
 holectl stats top-domains --blocked --from 7d
 holectl queries list --client-ip 192.168.1.20 --length 20
 holectl lists add https://example.com/hosts.txt && holectl action gravity
+holectl local-dns records add nas.lan 192.168.1.10   # local A record (AAAA for an IPv6 address)
+holectl local-dns cname add media.lan nas.lan        # local CNAME: alias -> existing hostname
 holectl server-config set dns.upstreams '["1.1.1.1","9.9.9.9"]'
 holectl teleporter export --file backup.zip
 holectl api GET /info/ftl                          # anything not wrapped

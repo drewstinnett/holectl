@@ -14,6 +14,7 @@ Start with: holectl config init --url https://pi.hole --insecure --password-stdi
 			queriesCmd(),
 			searchCmd(),
 			domainsCmd(),
+			localDNSCmd(),
 			listsCmd(),
 			groupsCmd(),
 			clientsCmd(),
