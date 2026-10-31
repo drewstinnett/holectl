@@ -19,13 +19,13 @@ fi
 log=$(git log --format='%s%n%b%n--END--' "$range")
 [ -n "$log" ] || exit 0
 
-bump=none
+bump="none"
 if printf '%s\n' "$log" | grep -Eq '^[a-z]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:'; then
-	bump=major
+	bump="major"
 elif printf '%s\n' "$log" | grep -Eq '^feat(\([^)]*\))?:'; then
-	bump=minor
+	bump="minor"
 elif printf '%s\n' "$log" | grep -Eq '^(fix|perf|refactor|revert|build)(\([^)]*\))?:'; then
-	bump=patch
+	bump="patch"
 fi
 [ "$bump" != none ] || exit 0
 
@@ -37,7 +37,7 @@ patch=${rest#*.}
 
 # Before 1.0.0 a breaking change bumps the minor; 1.0.0 is tagged deliberately, by hand.
 if [ "$bump" = major ] && [ "$major" -eq 0 ]; then
-	bump=minor
+	bump="minor"
 fi
 
 case $bump in
