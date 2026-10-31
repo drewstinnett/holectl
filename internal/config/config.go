@@ -52,9 +52,14 @@ func DefaultPath() string {
 	return filepath.Join(xdgDir("XDG_CONFIG_HOME", ".config"), "holectl", "config.json")
 }
 
+// CacheDir is $XDG_CACHE_HOME/holectl, else ~/.cache/holectl.
+func CacheDir() string {
+	return filepath.Join(xdgDir("XDG_CACHE_HOME", ".cache"), "holectl")
+}
+
 // SessionCachePath is where cached API sessions live.
 func SessionCachePath() string {
-	return filepath.Join(xdgDir("XDG_CACHE_HOME", ".cache"), "holectl", "sessions.json")
+	return filepath.Join(CacheDir(), "sessions.json")
 }
 
 func xdgDir(env, fallback string) string {

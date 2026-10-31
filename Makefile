@@ -3,7 +3,7 @@ PREFIX   ?= $(HOME)/bin
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS  := -s -w -X main.version=$(VERSION)
 
-.PHONY: build test lint fmt check install skill clean
+.PHONY: build test lint fmt check install skill clean snapshot
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(BIN) .
@@ -33,3 +33,7 @@ skill: build
 
 clean:
 	rm -f $(BIN)
+
+# Build every release archive into dist/ without publishing (needs goreleaser).
+snapshot:
+	goreleaser release --snapshot --clean

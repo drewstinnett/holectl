@@ -42,7 +42,7 @@ linters:
       min-occurrences: 6
       # Command names ("list", "remove", ...) and JSON keys repeat by design.
       ignore-string-values:
-        - "^(list|add|update|remove|rm|delete|type|kind|comment|groups|enabled|count|from|until|true|false|json|table|auto|config|domains|lists|clients|item|name|status|regex|exact|allow|deny|block|path)$"
+        - "^(list|add|update|remove|rm|delete|type|kind|comment|groups|enabled|count|from|until|true|false|json|table|auto|config|domains|lists|clients|item|name|status|regex|exact|allow|deny|block|path|version)$"
     depguard:
       rules:
         # holectl has zero third-party dependencies, and this keeps it that way.

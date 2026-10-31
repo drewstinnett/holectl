@@ -31,6 +31,7 @@ Start with: holectl config init --url https://pi.hole --insecure --password-stdi
 			configCmd(),
 			skillCmd(),
 			versionCmd(),
+			updateCmd(),
 			helpCmd(),
 		},
 	}

@@ -107,6 +107,7 @@ holectl info messages list -o json   # diagnosis warnings shown in the web UI
 holectl action restart-dns -o json
 holectl logs ftl -o json             # add --follow to stream (one JSON object per line)
 holectl teleporter export --file backup.zip -o json
+holectl update --check -o json       # is a newer holectl released? (`holectl update` installs it)
 ```
 
 ## Output tips

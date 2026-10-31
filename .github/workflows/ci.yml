@@ -1,0 +1,29 @@
+name: ci
+
+# Pushes to main run this through release.yml, which releases only if it passes.
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: vet
+        run: go vet ./...
+      - name: gofmt
+        run: test -z "$(gofmt -s -l .)" || { gofmt -s -l .; exit 1; }
+      - name: test
+        run: go test -race ./...
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+      - name: shellcheck
+        run: shellcheck install.sh scripts/*.sh

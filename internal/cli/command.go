@@ -162,10 +162,12 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		c.Context, cancel = context.WithTimeout(c.Context, g.Timeout+5*time.Second)
 		defer cancel()
 	}
+	notice := c.startUpdateNotice()
 	err = cmd.Run(c, pos)
 	if c.G.NoSessionCache && c.client != nil && c.client.HasSession() {
 		_ = c.client.Logout(context.WithoutCancel(ctx))
 	}
+	defer notice()
 	if err != nil {
 		return c.fail(err)
 	}

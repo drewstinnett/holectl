@@ -1,0 +1,63 @@
+# Builds and publishes holectl releases. Run by .github/workflows/release.yml after it tags
+# main; `make snapshot` runs it locally without publishing.
+version: 2
+
+project_name: holectl
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: .
+    binary: holectl
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64, arm]
+    goarm: ["6", "7"]
+    ignore:
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+
+archives:
+  # No version in the name, so install.sh can fetch releases/latest/download/<name> directly.
+  # internal/update.AssetName must produce the same names.
+  - name_template: holectl_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Other
+      order: 999
+  filters:
+    exclude:
+      - '^.*?(docs|chore|ci|test|style)(\(.+\))??!?:.+$'
+
+release:
+  github:
+    owner: drewstinnett
+    name: holectl

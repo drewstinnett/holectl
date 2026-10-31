@@ -8,10 +8,39 @@ command reaches anything else. It has **no dependencies** outside the Go standar
 ## Install
 
 ```bash
-go install github.com/drewstinnett/holectl@latest
-# or, from a checkout:
-make install          # lint + test + build, then installs to ~/bin
+curl -fsSL https://raw.githubusercontent.com/drewstinnett/holectl/main/install.sh | sh
 ```
+
+The script picks the right binary for Linux or macOS (amd64, arm64, and armv6/armv7 for Raspberry Pis)
+and verifies it against the release's `checksums.txt`. It installs to `/usr/local/bin` when that's
+writable, and to `~/.local/bin` otherwise. To change that, set `HOLECTL_INSTALL_DIR`; to install a
+specific release, set `HOLECTL_VERSION`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/drewstinnett/holectl/main/install.sh | HOLECTL_VERSION=v0.1.0 sh
+```
+
+Windows zips and every other build are on the [releases page](https://github.com/drewstinnett/holectl/releases).
+Or build from source:
+
+```bash
+go install github.com/drewstinnett/holectl@latest
+make install          # from a checkout: lint + test + build, then installs to ~/bin
+```
+
+### Updating
+
+```bash
+holectl update --check    # report only
+holectl update            # download, verify the checksum, replace this binary in place
+holectl update --version v0.1.0   # install a specific release (downgrades allowed)
+```
+
+On a terminal, holectl checks for a new release at most once a day and mentions it on stderr. The
+check never runs when stderr is piped, so scripts and agents never see it. Set
+`HOLECTL_NO_UPDATE_CHECK=1` to turn it off. Development builds (`go install` from a checkout, or
+`make`) are never nagged; `holectl update --force` replaces one with the latest release. Set
+`GITHUB_TOKEN` if you hit GitHub's unauthenticated API rate limit.
 
 ## Configure
 
@@ -95,7 +124,21 @@ and flag it mentions exists.
 
 ```bash
 make check      # go vet, gofmt, golangci-lint (if installed), build, race tests
+make snapshot   # build every release archive into dist/ with GoReleaser, without publishing
 ```
+
+Releases are automatic. Every push to `main` runs CI. If CI passes, `scripts/next-version.sh` reads
+the [Conventional Commits](https://www.conventionalcommits.org/) since the last tag and picks the
+next semantic version:
+
+| Commits | Bump |
+|---|---|
+| `type!:` or a `BREAKING CHANGE:` footer | major (minor while still 0.x) |
+| `feat:` | minor |
+| `fix:`, `perf:`, `refactor:`, `revert:`, `build:` | patch |
+| only `docs:`, `chore:`, `ci:`, `test:` or `style:` | no release |
+
+When a bump is due, the workflow tags the commit and GoReleaser publishes the binaries and `checksums.txt`.
 
 The tests run against an `httptest` fake Pi-hole. Commands map onto the
 [Pi-hole v6 OpenAPI spec](https://github.com/pi-hole/FTL/tree/master/src/api/docs/content/specs);
